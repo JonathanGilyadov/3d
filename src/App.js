@@ -1,81 +1,156 @@
 import { useEffect, useRef } from "react";
 import "./App.css";
-import { RenderingEngine } from "@cornerstonejs/core";
-import { ViewportType } from "@cornerstonejs/core/dist/esm/enums";
-import {
-  ctVoiRange,
-  createImageIdsAndCacheMetaData,
-  initDemo,
-} from "./utils/demo/helpers";
+import cornerstone from "cornerstone-core";
+import * as cornerstoneSideImageLoader from "./lib";
+import * as cornerstoneWADOImageLoader from "cornerstone-wado-image-loader";
+import cornerstoneTools from "cornerstone-tools";
+import cornerstoneMath from "cornerstone-math";
+import dicomParser from "dicom-parser";
+import Hammer from "hammerjs";
+const imageIds = [
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000012.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000017.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000001.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000010.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000018.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000015.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000008.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000006.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000002.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000023.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000003.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000014.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000009.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000007.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000000.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000024.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000016.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000011.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000019.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000025.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000021.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000020.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000004.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000013.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000022.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000005.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000039.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000038.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000026.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000034.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000031.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000032.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000033.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000041.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000030.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000045.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000046.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000040.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000043.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000048.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000047.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000027.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000050.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000049.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000042.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000029.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000035.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000037.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000052.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000044.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000036.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000028.dcm",
+  "wadouri:https://plantarflex.github.io/cornerstoneSideImageLoader/data/CT000051.dcm",
+];
+
+function _init() {
+  // Externals
+  cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+  cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+  cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
+  cornerstoneTools.external.cornerstone = cornerstone;
+  cornerstoneTools.external.Hammer = Hammer;
+  cornerstoneSideImageLoader.external.cornerstone = cornerstone;
+
+  // Image Loader
+  const config = {
+    webWorkerPath: `https://tools.cornerstonejs.org/examples/assets/image-loader/cornerstoneWADOImageLoaderWebWorker.js`,
+    taskConfiguration: {
+      decodeTask: {
+        codecsPath: `https://tools.cornerstonejs.org/examples/assets/image-loader/cornerstoneWADOImageLoaderCodecs.js`,
+      },
+    },
+  };
+  cornerstoneWADOImageLoader.webWorkerManager.initialize(config);
+  cornerstoneTools.init();
+}
+
+const synchronizer = new cornerstoneTools.Synchronizer(
+  "cornerstonenewimage",
+  cornerstoneTools.updateImageSynchronizer
+);
+
+const display = async (element, imageIds) => {
+  console.log(element);
+  cornerstone.enable(element);
+  const image = await cornerstone.loadAndCacheImage(imageIds[0]);
+  cornerstone.displayImage(element, image);
+  synchronizer.add(element);
+  cornerstoneTools.addStackStateManager(element, [
+    "stack",
+    "playClip",
+    "Crosshairs",
+  ]);
+  cornerstoneTools.addToolState(element, "stack", {
+    imageIds: [...imageIds],
+    currentImageIdIndex: 0,
+  });
+  cornerstoneTools.addToolForElement(
+    element,
+    cornerstoneTools["StackScrollMouseWheelTool"]
+  );
+  cornerstoneTools.addToolForElement(
+    element,
+    cornerstoneTools["CrosshairsTool"]
+  );
+  cornerstoneTools.setToolActive("StackScrollMouseWheel", {
+    mouseButtonMask: 0,
+  });
+  cornerstoneTools.setToolActive("Crosshairs", {
+    mouseButtonMask: 2,
+    synchronizationContext: synchronizer,
+  });
+  return Promise.all(
+    imageIds.map((imageId) => cornerstone.loadAndCacheImage(imageId))
+  );
+};
+
+const { generateSideImages } = cornerstoneSideImageLoader;
+
 function App() {
   const el = useRef(null);
   useEffect(() => {
-    const content = document.getElementById("content");
-    const element = document.createElement("div");
-    element.id = "cornerstone-element";
-    element.style.width = "500px";
-    element.style.height = "500px";
+    const fun = async () => {
+      _init();
+      const axial = document.querySelector("#axial");
+      const sagittal = document.querySelector("#sagittal");
+      const coronal = document.querySelector("#coronal");
 
-    content.appendChild(element);
-    // ============================= //
-
-    /**
-     * Runs the demo
-     */
-    async function run() {
-      // Init Cornerstone and related libraries
-      await initDemo();
-
-      // Get Cornerstone imageIds and fetch metadata into RAM
-      const imageIds = await createImageIdsAndCacheMetaData({
-        StudyInstanceUID:
-          "1.3.6.1.4.1.14519.5.2.1.7009.2403.334240657131972136850343327463",
-        SeriesInstanceUID:
-          "1.3.6.1.4.1.14519.5.2.1.7009.2403.226151125820845824875394858561",
-        wadoRsRoot: "https://d3t6nz73ql33tx.cloudfront.net/dicomweb",
-        type: "STACK",
-      });
-
-      // Instantiate a rendering engine
-      const renderingEngineId = "myRenderingEngine";
-      const renderingEngine = new RenderingEngine(renderingEngineId);
-
-      // Create a stack viewport
-      const viewportId = "CT_STACK";
-      const viewportInput = {
-        viewportId,
-        type: ViewportType.STACK,
-        element,
-        defaultOptions: {
-          background: [0.2, 0, 0.2],
-        },
-      };
-
-      renderingEngine.enableElement(viewportInput);
-
-      // Get the stack viewport that was created
-      const viewport = renderingEngine.getViewport(viewportId);
-
-      // Define a stack containing a single image
-      const stack = [imageIds[0]];
-
-      // Set the stack on the viewport
-      await viewport.setStack(stack);
-
-      // Set the VOI of the stack
-      viewport.setProperties({ voiRange: ctVoiRange });
-
-      // Render the image
-      viewport.render();
-    }
-
-    run();
+      const images = await display(axial, imageIds);
+      const { coronalImageIds, sagittalImageIds } = generateSideImages(images);
+      await display(coronal, coronalImageIds);
+      await display(sagittal, sagittalImageIds);
+    };
+    fun();
   }, []);
 
   return (
     <div className="App">
       App
-      <div id="cornerstone-element" ref={el}></div>
+      <div id="axial" onContextMenu={(e) => e.preventDefault()}></div>
+      <div id="coronal" onContextMenu={(e) => e.preventDefault()}></div>
+      <div id="sagittal" onContextMenu={(e) => e.preventDefault()}></div>
+      <div id="dicomImage" ref={el}></div>
     </div>
   );
 }
